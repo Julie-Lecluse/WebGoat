@@ -1,0 +1,19 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkmarx AST analysis') {
+            steps {
+                checkmarxASTScanner additionalOptions: "--threshold \"sast-high=10; sast-medium=20; sca-high=10\"  --report-format sarif  --output-name \"help\"", 
+                baseAuthUrl: '', 
+                branchName: 'main', 
+                checkmarxInstallation: 'CxOne', 
+                credentialsId: '', 
+                projectName: 'Julie_WebGoat', 
+                serverUrl: '', 
+                tenantName: '', 
+                useOwnAdditionalOptions: true
+            }
+        }
+    }
+}
