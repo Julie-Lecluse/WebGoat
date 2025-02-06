@@ -82,7 +82,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
       }
 
       query.setInt(1, count);
-      query.setString(2,accountName)
+      query.setString(2,accountName);
       // String query = "SELECT * FROM user_data WHERE Login_Count = " + login_count + " and userid
       // = " + accountName, ;
       try {
