@@ -3,6 +3,9 @@ package org.owasp.webgoat.lessons.missingac;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
+
+import org.apache.commons.text.StringEscapeUtils;
+
 import lombok.Getter;
 
 /**
@@ -40,11 +43,11 @@ public class DisplayUser {
   private String userHash;
 
   public DisplayUser(User user, String passwordSalt) {
-    this.username = user.getUsername();
+    this.username = StringEscapeUtils.escapeHtml4(user.getUsername());
     this.admin = user.isAdmin();
 
     try {
-      this.userHash = genUserHash(user.getUsername(), user.getPassword(), passwordSalt);
+      this.userHash = genUserHash(StringEscapeUtils.escapeHtml4(user.getUsername()), user.getPassword(), passwordSalt);
     } catch (Exception ex) {
       this.userHash = "Error generating user hash";
     }
