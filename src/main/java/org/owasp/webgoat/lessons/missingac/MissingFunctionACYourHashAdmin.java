@@ -22,13 +22,14 @@
 
 package org.owasp.webgoat.lessons.missingac;
 
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
-import static org.owasp.webgoat.lessons.missingac.MissingFunctionAC.PASSWORD_SALT_ADMIN;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,7 +62,10 @@ public class MissingFunctionACYourHashAdmin implements AssignmentEndpoint {
     // if not admin then return 403
 
     var user = userRepository.findByUsername("Jerry");
-    var displayUser = new DisplayUser(user, PASSWORD_SALT_ADMIN);
+    SecureRandom rand = new SecureRandom();
+    byte[] salt = new byte[32];
+    rand.nextBytes(salt);
+    var displayUser = new DisplayUser(user, Base64.getEncoder().encodeToString(salt));
     if (userHash.equals(displayUser.getUserHash())) {
       return success(this).feedback("access-control.hash.success").build();
     } else {

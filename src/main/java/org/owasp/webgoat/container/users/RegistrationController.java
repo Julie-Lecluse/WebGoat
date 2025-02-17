@@ -1,17 +1,19 @@
 package org.owasp.webgoat.container.users;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author nbaars
@@ -30,6 +32,11 @@ public class RegistrationController {
     return "registration";
   }
 
+  private boolean isValidString(String string) {
+    // Example: Allow only alphanumeric characters, underscores, and hyphens
+    return string.matches("^[a-zA-Z0-9_-]+$");
+}
+
   @PostMapping("/register.mvc")
   public String registration(
       @ModelAttribute("userForm") @Valid UserForm userForm,
@@ -41,9 +48,10 @@ public class RegistrationController {
     if (bindingResult.hasErrors()) {
       return "registration";
     }
-    userService.addUser(userForm.getUsername(), userForm.getPassword());
-    request.login(userForm.getUsername(), userForm.getPassword());
-
+    if (isValidString(userForm.getUsername()) && isValidString(userForm.getPassword())){
+      userService.addUser(userForm.getUsername(), userForm.getPassword());
+      request.login(userForm.getUsername(), userForm.getPassword());
+    }
     return "redirect:/attack";
   }
 

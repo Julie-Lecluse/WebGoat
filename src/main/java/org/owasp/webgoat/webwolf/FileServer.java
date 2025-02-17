@@ -51,6 +51,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.google.common.html.HtmlEscapers;
+
 /** Controller for uploading a file */
 @Controller
 @Slf4j
@@ -111,7 +113,7 @@ public class FileServer {
     modelAndView.setViewName("files");
     File changeIndicatorFile = new File(destinationDir, username + "_changed");
     if (changeIndicatorFile.exists()) {
-      modelAndView.addObject("uploadSuccess", request.getParameter("uploadSuccess"));
+      modelAndView.addObject("uploadSuccess", HtmlEscapers.htmlEscaper().escape(request.getParameter("uploadSuccess")));
     }
     changeIndicatorFile.delete();
 

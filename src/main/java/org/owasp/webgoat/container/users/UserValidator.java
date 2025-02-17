@@ -1,9 +1,10 @@
 package org.owasp.webgoat.container.users;
 
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+
+import lombok.AllArgsConstructor;
 
 /**
  * @author nbaars
