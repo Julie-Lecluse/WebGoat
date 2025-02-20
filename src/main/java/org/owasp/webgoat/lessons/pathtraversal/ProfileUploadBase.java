@@ -1,9 +1,5 @@
 package org.owasp.webgoat.lessons.pathtraversal;
 
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.informationMessage;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,18 +7,23 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import lombok.Getter;
-import lombok.SneakyThrows;
+
 import org.apache.commons.io.FilenameUtils;
 import org.owasp.webgoat.container.CurrentUsername;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.informationMessage;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import lombok.Getter;
+import lombok.SneakyThrows;
 
 @Getter
 public class ProfileUploadBase implements AssignmentEndpoint {
@@ -63,12 +64,23 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
-    if (uploadDirectory.exists()) {
-      FileSystemUtils.deleteRecursively(uploadDirectory);
+    try {
+      var baseDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/");
+      var uploadDirectory = new File(baseDirectory, username);
+      String canonicalPath = uploadDirectory.getCanonicalPath();
+      String canonicalBase = baseDirectory.getCanonicalPath();
+      if(!canonicalPath.startsWith(canonicalBase)) {
+        return null;
+      }
+      if (uploadDirectory.exists()) {
+        FileSystemUtils.deleteRecursively(uploadDirectory);
+      }
+      Files.createDirectories(uploadDirectory.toPath());
+      return uploadDirectory;
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
     }
-    Files.createDirectories(uploadDirectory.toPath());
-    return uploadDirectory;
+    return null;
   }
 
   private boolean attemptWasMade(File expectedUploadDirectory, File uploadedFile)
@@ -96,25 +108,35 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   }
 
   protected byte[] getProfilePictureAsBase64(String username) {
-    var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
-    var profileDirectoryFiles = profilePictureDirectory.listFiles();
-
-    if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
-      return Arrays.stream(profileDirectoryFiles)
-          .filter(file -> FilenameUtils.isExtension(file.getName(), List.of("jpg", "png")))
-          .findFirst()
-          .map(
-              file -> {
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
-                  return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
-                } catch (IOException e) {
-                  return defaultImage();
-                }
-              })
-          .orElse(defaultImage());
-    } else {
-      return defaultImage();
+    try {
+      var baseDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/");
+      var profilePictureDirectory = new File(baseDirectory, username);
+      String canonicalPath = profilePictureDirectory.getCanonicalPath();
+      String canonicalBase = baseDirectory.getCanonicalPath();
+      if(!canonicalPath.startsWith(canonicalBase)) {
+        return defaultImage();
+      }
+      var profileDirectoryFiles = profilePictureDirectory.listFiles();
+      if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
+        return Arrays.stream(profileDirectoryFiles)
+            .filter(file -> FilenameUtils.isExtension(file.getName(), List.of("jpg", "png")))
+            .findFirst()
+            .map(
+                file -> {
+                  try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
+                    return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
+                  } catch (IOException e) {
+                    return defaultImage();
+                  }
+                })
+            .orElse(defaultImage());
+      } else {
+        return defaultImage();
+      }
+    } catch (IOException e) {
+      System.err.println(e.getMessage());
     }
+    return defaultImage();
   }
 
   @SneakyThrows
